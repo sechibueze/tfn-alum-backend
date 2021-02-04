@@ -12,6 +12,7 @@ type Auth{
     token: String!
 }
 input UpdateInput{
+    id: ID!
     username: String
     email: String
     password: String
@@ -20,7 +21,7 @@ input UpdateInput{
 type Query{
     getUsers: [User]!
     getUserById(id: ID!): User!
-    getUserByAuth(token: String!): User!
+    getUserByAuth: User!
 }
 
 type Mutation{
