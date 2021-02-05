@@ -1,9 +1,11 @@
 
 
-const validatePassword = (password, confirmPassword) => {
+const validatePassword = (password, confirmPassword = '') => {
     let errors = [];
-    if (password !== confirmPassword) {
-       errors = errors.concat('Password does not match');
+    if (confirmPassword) {
+        if (password !== confirmPassword) {
+            errors = errors.concat('Password does not match');
+         }
     }
     if (password.length < 6) {
         errors = errors.concat('Password is too short');

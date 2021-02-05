@@ -13,7 +13,10 @@ const server = new ApolloServer({
     resolvers,
     context: async ({ req }) => {
         const bearer = req.headers.authorization || '';
-        if(!bearer) return null;
+        if(!bearer) return {
+            status: false,
+            error: 'only authenticated users are allowed'
+        };
         const token = bearer.split('Bearer ')[1];
         const user = await getUserByToken(token);
         return {

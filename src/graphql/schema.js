@@ -1,6 +1,7 @@
 const { gql } = require('apollo-server');
 
 const typeDefs = gql`
+# Primary schema
 type User{
     id: ID!
     username: String!
@@ -8,20 +9,35 @@ type User{
     password: String!
 }
 
+# Input types
+input UpdateInput{
+    id: ID!
+    username: String!
+    email: String!
+    password: String!
+}
+# Other types
 type Auth{
     token: String!
 }
-input UpdateInput{
-    id: ID!
-    username: String
-    email: String
-    password: String
-
+type ResponsePayload{
+    status: Boolean!
+    message: String
+    error: String
+    data: User
 }
+type DeleteResponse{
+    status: Boolean!
+    message: String
+    error: String
+    data: String
+}
+# Query and Mutations
 type Query{
     getUsers: [User]!
     getUserById(id: ID!): User!
     getUserByAuth: User!
+    
 }
 
 type Mutation{
@@ -38,7 +54,8 @@ type Mutation{
     updateUserById(
         id: ID! 
         userData: UpdateInput
-        ): User 
+    ): ResponsePayload 
+    removeUser(id: ID): DeleteResponse
 }
 
 

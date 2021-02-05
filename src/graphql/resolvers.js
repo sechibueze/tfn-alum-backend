@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { signupValidations, loginValidations } = require('../validations/auth');
+const { signupValidations, loginValidations, validateEmail, validateUsername, validatePassword } = require('../validations/auth');
 
 module.exports = {
     Query: {
@@ -89,8 +89,56 @@ module.exports = {
                 token
             };
         },
-        updateUserById: (_, { id }, context) => {
-            console.log('c', context.currentUser, id )
+        updateUserById: async (_, { userData: { id, email, password, username }} , context) => {
+            let errors = []; let valid = true;
+            const { errors: emailErrors, valid: isValidEmail} = validateEmail(email);
+            const { errors: passwordErrors, valid: isValidPassword} = validatePassword(password);
+            const { errors: usernameErrors, valid: isValidUsername} = validateUsername(username);
+            if(!isValidEmail || !isValidPassword || !isValidUsername){
+                valid = false;
+                errors = errors.concat(emailErrors).concat(usernameErrors).concat(passwordErrors);
+            }
+            if(!valid) throw new Error(errors)
+
+            if(!context.currentUser || !context.currentUser.id) return { status: false, error: 'Unauthenticated'}
+            // User is logged in
+            const authUserId = context.currentUser.id;
+            const user = await User.findById(authUserId);
+            
+            if(!user) return { status: false, error: 'User not found'}
+
+            if(email) user.email = email;
+            if(username) user.username = username;
+            
+            if(password) {
+                // Validate Password
+                const { errors, valid } = validatePassword(password);
+                if(!valid) throw new Error('Invalid password ', { errors })
+                // Hash password
+                const hash = await bcrypt.hash(password, 12);
+                user.password = hash;
+            }
+
+            const _user = await user.save()
+
+            return {
+                status: true,
+                message: 'User updated',
+                data: _user
+            }
+
+
+        },
+        removeUser: async (_, {id}, context) => {
+            if(!context.currentUser || !context.currentUser.id) return { status: false, error: 'UnAuth'}
+            
+            const user = await User.findById(id);
+            const _user = await user.remove();
+            return {
+                status: true,
+                message: 'User gone',
+                data: _user.id
+            }
         }
         
     }
